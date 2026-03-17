@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>環境教育：塑膠解碼特務 3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0B101E;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(16, 35, 30, 0.8) 0%, transparent 60%),
+                linear-gradient(rgba(0, 255, 128, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 128, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
 
+        /* 霓虹邊框效果 */
+        .neon-border {
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+            border: 2px solid rgba(74, 222, 128, 0.6);
+        }
+
+        /* X光透視遮罩 */
+        #xray-mask {
+            clip-path: circle(0px at 0px 0px);
+            transition: clip-path 0.05s ease-out;
+        }
+
+        /* 答錯震動 */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-10px, 0); }
+            75% { transform: translate(10px, 0); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; border-color: #f87171 !important; }
+
+        /* 拖曳中的目標區發光 */
+        .drop-zone.drag-over {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 25px currentColor;
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.8);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col text-white">
+
+    <header class="p-4 flex justify-between items-center bg-black/50 backdrop-blur-md border-b border-green-900/50">
+        <div>
+            <h1 class="text-2xl font-black text-green-400 tracking-tighter">塑膠解碼特務 <span class="text-xs font-normal text-gray-400">v3.0</span></h1>
+            <p id="hint-msg" class="text-xs text-green-200/70">SCANNING SYSTEM ACTIVE...</p>
+        </div>
+        <div class="flex gap-8">
+            <div class="text-right">
+                <p class="text-[10px] text-green-500 uppercase">Current Score</p>
+                <p id="score-display" class="text-2xl font-mono font-bold text-yellow-400">0000</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-green-500 uppercase">Task Progress</p>
+                <p id="progress-display" class="text-2xl font-mono font-bold text-green-300">1 / 10</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-around p-6">
+        <div id="item-box" class="relative w-64 h-64 bg-gray-900 rounded-3xl neon-border flex flex-col items-center justify-center cursor-grab active:cursor-grabbing" draggable="true">
+            <div class="flex flex-col items-center z-10 pointer-events-none">
+                <div id="item-emoji" class="text-8xl mb-4 drop-shadow-2xl">📦</div>
+                <div id="item-name" class="px-4 py-1 bg-black/50 rounded-full text-lg font-bold border border-gray-700">準備中...</div>
+            </div>
+            
+            <div id="xray-mask" class="absolute inset-0 bg-green-400 rounded-3xl flex flex-col items-center justify-center z-20 pointer-events-none">
+                <p class="text-green-900 text-[10px] font-black mb-1">X-RAY ANALYSIS</p>
+                <div class="flex items-center">
+                    <span class="text-4xl text-green-900 mr-1">♻️</span>
+                    <span id="item-code" class="text-8xl font-black text-green-900">?</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full max-w-5xl grid grid-cols-3 gap-6">
+            <div class="drop-zone border-2 border-dashed border-green-500 text-green-500 rounded-2xl p-6 flex flex-col items-center justify-center transition-all duration-300 bg-green-500/5" data-zone="good">
+                <span class="text-4xl mb-2">🟢</span>
+                <span class="font-black text-lg">優良回收</span>
+                <span class="text-[10px] opacity-60">1, 2, 4, 5 號純塑膠</span>
+            </div>
+            <div class="drop-zone border-2 border-dashed border-red-500 text-red-500 rounded-2xl p-6 flex flex-col items-center justify-center transition-all duration-300 bg-red-500/5" data-zone="toxic">
+                <span class="text-4xl mb-2">🔴</span>
+                <span class="font-black text-lg">有毒/拒用</span>
+                <span class="text-[10px] opacity-60">3, 6 號及油污容器</span>
+            </div>
+            <div class="drop-zone border-2 border-dashed border-yellow-500 text-yellow-500 rounded-2xl p-6 flex flex-col items-center justify-center transition-all duration-300 bg-yellow-500/5" data-zone="trap">
+                <span class="text-4xl mb-2">🟡</span>
+                <span class="font-black text-lg">漂綠陷阱</span>
+                <span class="text-[10px] opacity-60">7 號及複合材質</span>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-xl hidden flex items-center justify-center z-50 p-6">
+        <div id="modal-card" class="bg-gray-900 border-2 border-green-500 p-8 rounded-[2rem] max-w-lg w-full text-center transition-all scale-90 opacity-0">
+            <div id="m-icon" class="text-7xl mb-4">🎖️</div>
+            <h2 id="m-title" class="text-2xl font-bold text-green-400 mb-2">任務反饋</h2>
+            <div id="m-bonus" class="text-yellow-400 font-mono font-bold text-xl mb-4">+100 PTS</div>
+            
+            <div id="final-box" class="hidden mb-6 py-4 bg-green-900/20 rounded-2xl border border-green-800">
+                <p class="text-gray-400 text-xs uppercase">Final Performance</p>
+                <p id="final-score" class="text-6xl font-black text-yellow-400 my-2">0</p>
+                <p id="final-rank" class="text-xl font-bold text-green-300">特務等級：載入中</p>
+            </div>
+
+            <p id="m-desc" class="text-gray-300 leading-relaxed mb-8 bg-black/40 p-4 rounded-xl text-sm">知識解析內容...</p>
+            <button id="next-btn" class="btn-glow bg-green-600 text-white font-black py-4 px-12 rounded-full tracking-widest transition-all w-full uppercase">
+                Next Mission
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { e: "🍱", n: "微波便當盒", c: "5", z: "good", d: "5號 (PP) 極其耐熱！是少數能安全進入微波爐的塑膠材質。" },
+            { e: "🥛", n: "鮮奶分享瓶", c: "2", z: "good", d: "2號 (HDPE) 材質穩定且耐酸鹼，是台灣資源回收體系中的優等生。" },
+            { e: "🥡", n: "透明保鮮膜", c: "3", z: "toxic", d: "3號 (PVC) 在加熱或燃燒時會釋出戴奧辛。請改用矽膠蓋更環保！" },
+            { e: "🍜", n: "保麗龍泡麵碗", c: "6", z: "toxic", d: "6號 (PS) 遇到 70度以上高溫就會變形釋毒。為了健康，別拿它裝熱湯！" },
+            { e: "🥤", n: "PLA 分解杯", c: "7", z: "trap", d: "它需要『工業堆肥』的高溫環境才能分解。在台灣目前的環境只能當垃圾處理。" },
+            { e: "🧴", n: "寶特瓶", c: "1", z: "good", d: "1號 (PET) 回收後能重新做成衣服或地毯，回收價值極高！" },
+            { e: "🛍️", n: "髒汙外帶袋", c: "!", z: "toxic", d: "沾了油水的塑膠袋無法回收！會汙染整批資源，請直接丟一般垃圾。" },
+            { e: "☔", n: "輕便雨衣", c: "3", z: "toxic", d: "多數廉價雨衣含 3號 PVC。建議購買布製雨衣，減少一次性浪費。" },
+            { e: "📦", n: "網購氣泡紙", c: "4", z: "good", d: "4號 (LDPE) 只要將空氣擠掉且保持乾淨，它是可以進入薄膜回收區的。" },
+            { e: "🍵", n: "紙杯容器", c: "7", z: "trap", d: "紙杯內層有塑膠淋膜，屬於『紙容器』類，不可混進純塑膠回收桶喔！" }
+        ];
+
+        let index = 0;
+        let score = 0;
+        let penalty = 0;
+
+        // X光移動
+        const moveXray = (x, y) => {
+            const rect = document.getElementById('item-box').getBoundingClientRect();
+            const relX = x - rect.left;
+            const relY = y - rect.top;
+            if (relX >= 0 && relX <= rect.width && relY >= 0 && relY <= rect.height) {
+                document.getElementById('xray-mask').style.clipPath = `circle(70px at ${relX}px ${relY}px)`;
+            } else {
+                document.getElementById('xray-mask').style.clipPath = `circle(0px at 0px 0px)`;
+            }
+        };
+
+        document.getElementById('item-box').addEventListener('mousemove', e => moveXray(e.clientX, e.clientY));
+
+        // 題目控制
+        function load() {
+            if (index >= questions.length) {
+                summary();
+                return;
+            }
+            const q = questions[index];
+            document.getElementById('item-emoji').textContent = q.e;
+            document.getElementById('item-name').textContent = q.n;
+            document.getElementById('item-code').textContent = q.c;
+            document.getElementById('progress-display').textContent = `${index + 1} / 10`;
+            document.getElementById('item-box').setAttribute('data-target', q.z);
+            penalty = 0;
+            document.getElementById('next-btn').textContent = "Next Mission";
+        }
+
+        // 拖曳邏輯
+        const box = document.getElementById('item-box');
+        box.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('target', box.getAttribute('data-target'));
+            document.getElementById('xray-mask').style.clipPath = `circle(0px at 0px 0px)`;
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                if (e.dataTransfer.getData('target') === zone.getAttribute('data-zone')) {
+                    const gain = Math.max(0, 100 - penalty);
+                    score += gain;
+                    document.getElementById('score-display').textContent = score.toString().padStart(4, '0');
+                    feedback(gain);
+                } else {
+                    penalty += 25;
+                    box.classList.add('shake');
+                    setTimeout(() => box.classList.remove('shake'), 400);
+                }
+            });
+        });
+
+        function feedback(gain) {
+            const q = questions[index];
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('m-bonus').classList.remove('hidden');
+            document.getElementById('m-bonus').textContent = `+${gain} POINTS`;
+            document.getElementById('m-desc').textContent = q.d;
+            document.getElementById('m-icon').textContent = gain > 50 ? "💎" : "⚠️";
+            
+            setTimeout(() => {
+                document.getElementById('modal-card').classList.replace('scale-90', 'scale-100');
+                document.getElementById('modal-card').classList.replace('opacity-0', 'opacity-100');
+            }, 50);
+        }
+
+        function summary() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('m-bonus').classList.add('hidden');
+            document.getElementById('final-box').classList.remove('hidden');
+            document.getElementById('final-score').textContent = score;
+            
+            let rank = "實習生 (Intern)";
+            if (score >= 900) rank = "傳說特務 (Legend)";
+            else if (score >= 700) rank = "精英特務 (Elite)";
+            
+            document.getElementById('final-rank').textContent = `特務等級：${rank}`;
+            document.getElementById('m-title').textContent = "任務總結報告";
+            document.getElementById('m-desc').textContent = "你已成功辨識 10 件環境樣本，請持續將減塑知識落實在生活中！";
+            document.getElementById('m-icon').textContent = "🏆";
+            
+            const btn = document.getElementById('next-btn');
+            btn.textContent = "Reboot Mission (再玩一次)";
+            btn.onclick = () => location.reload();
+
+            setTimeout(() => {
+                document.getElementById('modal-card').classList.replace('scale-90', 'scale-100');
+                document.getElementById('modal-card').classList.replace('opacity-0', 'opacity-100');
+            }, 50);
+        }
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (index < questions.length) {
+                document.getElementById('modal-card').classList.replace('scale-100', 'scale-90');
+                document.getElementById('modal-card').classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => {
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    index++;
+                    load();
+                }, 300);
+            }
+        });
+
+        load();
+    </script>
+</body>
+</html>
