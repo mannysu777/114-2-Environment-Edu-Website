@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>綠種編年史：史詩試煉之門</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 全域奇幻冒險風格設定 --- */
+        :root {
+            --magic-gold: #d4af37; 
+            --magic-glow: rgba(212, 175, 55, 0.6);
+            --nature-green: #4CAF50; 
+            --dark-bg: #1a0b2e; 
+        }
+        
+        body {
+            font-family: 'Noto Serif TC', 'Cinzel', serif;
+            background: radial-gradient(circle at center, var(--dark-bg) 0%, #000000 100%);
+            color: #f4eacc;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+        }
+
+        /* --- 魔法粒子背景 (Canvas) --- */
+        #magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* --- 遊戲主容器：加大寬度以容納大字體 --- */
+        .container {
+            background-color: rgba(20, 10, 30, 0.85); 
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 50px; /* 增加內邊距讓畫面更有呼吸感 */
+            max-width: 800px; /* 從 680px 放寬到 800px */
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(212,175,55,0.3);
+            border: 2px solid #5a4a35; 
+            position: relative;
+            transition: all 0.5s ease;
+            opacity: 1;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border: 1px solid var(--magic-gold);
+            border-radius: 14px;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* --- 標題：強烈發光與金屬漸層 --- */
+        h1 { 
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #fffde4, var(--magic-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 48px; /* 標題放大 */
+            margin-bottom: 25px; 
+            filter: drop-shadow(0 0 15px rgba(212,175,55,0.8));
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        h2 { 
+            color: #fff; 
+            font-size: 28px; /* 題目文字放大 */
+            line-height: 1.8; 
+            margin-bottom: 35px; 
+            text-align: left; 
+            border-left: 4px solid var(--magic-gold);
+            padding-left: 20px;
+            font-weight: bold;
+        }
+        
+        p { 
+            font-size: 22px; /* 內文放大 */
+            line-height: 1.8; 
+            color: #b0bec5; 
+            margin-bottom: 35px; 
+        }
+
+        /* --- 符文按鈕：石板直角、光暈與魔法爆發 --- */
+        .btn {
+            background: linear-gradient(145deg, #2a1f3d, #1a1025);
+            color: var(--magic-gold);
+            border: 1px solid #5a4a35;
+            padding: 20px 30px; /* 按鈕變胖、變高 */
+            margin: 15px 0;
+            border-radius: 10px; 
+            font-size: 24px; /* 選項文字放大 */
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            display: block; 
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .btn:hover { 
+            border-color: var(--magic-gold);
+            background-color: rgba(212, 175, 55, 0.15);
+            box-shadow: 0 0 15px var(--magic-glow), inset 0 0 10px var(--magic-glow);
+            transform: translateX(5px); 
+            color: #fff;
+        }
+
+        .btn::before { content: "⚔️ [ "; color: var(--magic-gold); font-weight: bold; }
+        .btn::after { content: " ]"; color: var(--magic-gold); font-weight: bold; }
+
+        /* 首頁與重新開始按鈕 */
+        .btn-action {
+            background: linear-gradient(to bottom, #4CAF50, #2e7d32);
+            color: white;
+            border: 1px solid #81c784;
+            text-align: center;
+            font-size: 28px; /* 動作按鈕放大 */
+            font-weight: bold;
+            justify-content: center;
+            padding: 20px 40px;
+            border-radius: 12px;
+            animation: actionBreath 3s ease-in-out infinite; 
+        }
+        .btn-action:hover {
+            background: linear-gradient(to bottom, #66bb6a, #388e3c);
+            transform: translateY(-3px) scale(1.02); 
+            box-shadow: 0 5px 25px rgba(56, 142, 60, 0.8);
+            color: white;
+        }
+        .btn-action::before, .btn-action::after { content: ""; }
+
+        @keyframes actionBreath {
+            0%, 100% { box-shadow: 0 5px 15px rgba(56, 142, 60, 0.4); }
+            50% { box-shadow: 0 5px 25px rgba(56, 142, 60, 0.8); }
+        }
+
+        #question-container, #result-container { display: none; opacity: 0; }
+
+        /* --- 生態進度條 --- */
+        .progress-bar-container { margin-bottom: 35px; text-align: right; }
+        .progress-text { font-size: 18px; color: var(--magic-gold); margin-bottom: 10px; text-shadow: 0 0 5px rgba(212, 175, 55, 0.5); font-weight: bold; }
+        .progress-bar { width: 100%; background-color: #000; border-radius: 10px; height: 10px; overflow: hidden; border: 1px solid #5a4a35; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #81c784, #4CAF50); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 10px var(--nature-green); }
+
+        /* --- 結果頁面 --- */
+        .result-title { font-size: 42px; color: #ffeb3b; margin: 25px 0; font-weight: bold; text-shadow: 0 0 15px rgba(255, 235, 59, 0.7); letter-spacing: 2px;}
+        .result-desc { font-size: 22px; text-align: left; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 12px; line-height: 1.8; border: 1px solid var(--magic-gold); backdrop-filter: blur(5px); }
+        .highlight { color: var(--nature-green); font-weight: bold; text-shadow: 0 0 5px rgba(76,175,80,0.5); font-size: 24px;}
+
+        .fade-out { opacity: 0 !important; transform: translateY(-20px) !important; }
+        .fade-in { opacity: 1 !important; transform: translateY(0) !important; }
+    </style>
+</head>
+<body>
+
+<canvas id="magic-particles"></canvas>
+
+<div class="container fade-in" id="start-container">
+    <h1>🌱 綠種編年史</h1>
+    <p>西元 2150 年，地球陷入沉睡。<br>而你，是被迴聲喚醒的「遺蹟之子」。<br><br>你的每一個直覺選擇，都將決定你的靈魂會與哪種生態力量共鳴，<br>開出什麼顏色的智慧之花。<br><br>準備好踏上這場鑑定靈魂的奇幻旅程了嗎？</p>
+    <button class="btn btn-action" style="margin-top:25px;" onclick="changeScene('start-container', 'question-container', startGame)">▶ 開啟史詩編年史</button>
+</div>
+
+<div class="container" id="question-container">
+    <div class="progress-bar-container">
+        <div class="progress-text" id="progress-text">試煉場景：1 / 10</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <h2 id="question-text">場景載入中...</h2>
+    <button class="btn" id="btn-a" onclick="selectAnswer('A')">載入中...</button>
+    <button class="btn" id="btn-b" onclick="selectAnswer('B')">載入中...</button>
+</div>
+
+<div class="container" id="result-container">
+    <h1 style="font-size:40px;">✨ 靈魂鑑定完成 ✨</h1>
+    <p style="font-size:24px; margin-bottom: 10px;">你的專屬奇幻生態職業是：</p>
+    <div class="result-title" id="result-name">載入中...</div>
+    <div class="result-desc" id="result-description">載入中...</div>
+    <button class="btn btn-action" style="margin-top: 35px;" onclick="changeScene('result-container', 'start-container')">↺ 重新展開試煉</button>
+</div>
+
+<script>
+    const canvas = document.getElementById('magic-particles');
+    const ctx = canvas.getContext('2d');
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    
+    const particles = [];
+    const colors = ['#d4af37', '#f4eacc', '#4facfe', '#4CAF50']; 
+    
+    for(let i = 0; i < 80; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 2.5 + 0.5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speedY: Math.random() * -0.5 - 0.1,
+            speedX: Math.random() * 0.4 - 0.2,
+            opacity: Math.random() * 0.5 + 0.3
+        });
+    }
+
+    function drawMagic() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.opacity;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fill();
+            p.y += p.speedY;
+            p.x += p.speedX;
+            if(p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; }
+        });
+        requestAnimationFrame(drawMagic);
+    }
+    drawMagic();
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+    const questions = [
+        { text: "1.【初入風之村】<br>村民們正手忙腳亂地組裝一台巨大的風力發電機，那是喚醒水源的關鍵。你會...", a: "站到高處指揮大家，把村民分成不同的小隊合作！", b: "找個安靜的角落研究設計圖，默默把卡住的齒輪修好。", type: "EI" },
+        { text: "2.【長老的神祕禮物】<br>村長給了你一顆未知的種子。拿到手的第一個瞬間，你首先...", a: "仔細觀察種子的外殼紋路、硬度，嘗試從具體的特徵判斷它的種類。", b: "閉上眼睛，想像它未來長成參天巨木、甚至是改變整個村落生態的願景。", type: "SN" },
+        { text: "3.【哭泣的河童】<br>一隻小河童因為溪水被黑魔法污染而在哭泣。為了幫他，你會...", a: "冷靜地採集水質樣本，嘗試調配一種超級淨化藥劑來徹底修復它。", b: "先給予他一個溫暖的擁抱，並號召森林裡的所有動物一起守護河童家園。", type: "TF" },
+        { text: "4.【出發準備】<br>明天就要進入危險的「迷霧森林」尋找淨化源石，今晚你會怎麼度過？", a: "列出一張完美的裝備清單，將指南針、乾糧精準地塞進背包。", b: "隨意塞進幾樣東西，反正冒險旅途永遠充滿著無法預測的驚喜！", type: "JP" },
+        { text: "5.【奇蹟之泉】<br>你發現了一個沒有被污染的「奇蹟之泉」，你想保護它！你會...", a: "立刻在該區域架設精美的告示牌，熱情地向所有人推廣這個純淨區。", b: "在該區域周圍種滿隱蔽的荊棘藤蔓，將這個秘密默默地守護在心底。", type: "EI" },
+        { text: "6.【擋路的廢棄物】<br>糟糕！山徑被一座不知名怪物留下的巨大廢棄物山擋住了。你的想法是：", a: "「不管那麼多，現在就動手把可用的物資和垃圾做好具體分類！」", b: "「這些廢棄物到底是從哪來的？我們必須找到源頭去改變這一切！」", type: "SN" },
+        { text: "7.【魔法水抉擇】<br>你得到一瓶能修復環境的「精靈之水」。前面有兩株植物快枯萎了，你只能救一個：", a: "結滿果實的蘋果樹。因為它可以讓更多小動物吃飽，符合整體生存效益。", b: "會發出微光的神祕小花。雖然不能吃，但它真的好美，符合內心的情感呼喚。", type: "TF" },
+        { text: "8.【突如其來的酸雨】<br>天空突降帶有腐蝕性的酸雨！這時候的你...", a: "立刻撐開出門前就準備好的「抗腐蝕魔法傘」，安然無恙地繼續前進。", b: "拔起路邊巨大的芭蕉葉頂在頭上當傘，覺得這真是一場刺激的冒險意外！", type: "JP" },
+        { text: "9.【面對哥布林】<br>你抓到一個正在亂丟廢舊魔力水晶的哥布林，你會怎麼勸阻他？", a: "告訴他水晶裡的毒素會污染多少公升的地下水，用嚴謹的數據分析嚴重性。", b: "告訴他如果小兔子不小心誤食水晶會肚子痛，試圖喚醒他的同理心。", type: "TF" },
+        { text: "10.【旅途編年史】<br>冒險即將結束，你打算如何記錄這趟拯救大陸的旅程？", a: "寫一本結構清晰、排版整齊的航海日誌，清楚記錄每一天的天氣與成就。", b: "做一本貼滿奇異樹葉、隨手畫的素描、寫滿突發感言的奇妙剪貼簿。", type: "JP" }
+    ];
+
+    const results = {
+        "ESTJ": { name: "荒野巡守長 (ESTJ)", desc: "<span class='highlight'>【規則捍衛】</span>執行力滿點！你最擅長督促大家一起遵守綠色生活公約，是校園裡最可靠的守護者。" },
+        "ESFJ": { name: "綠色小天使 (ESFJ)", desc: "<span class='highlight'>【團隊互助】</span>你喜歡揪團行動！總是能用熱情帶動周圍的朋友們一起做好事，讓環境變得更溫暖。" },
+        "ISTJ": { name: "大地騎士 (ISTJ)", desc: "<span class='highlight'>【嚴格守護】</span>最可靠的環保守護者！誰要是沒做好資源回收，絕對逃不過你的法眼。" },
+        "ISFJ": { name: "泉水精靈 (ISFJ)", desc: "<span class='highlight'>【默默付出】</span>你總是在背後默默把環境整理乾淨，用實際行動維持大家最舒服的空間。" },
+        "ESTP": { name: "極限探險家 (ESTP)", desc: "<span class='highlight'>【行動派】</span>坐不住的戶外派！與其看影片，你更喜歡直接衝去戶外親手參與環境改造。" },
+        "ESFP": { name: "大地表演家 (ESFP)", desc: "<span class='highlight'>【潮流帶動】</span>你能把環保變成一件「很潮」的事！讓大家覺得愛護地球其實超級酷。" },
+        "ISTP": { name: "資源修復師 (ISTP)", desc: "<span class='highlight'>【巧手重生】</span>校園裡的修理達人！你總有辦法敲敲打打，讓壞掉的東西起死回生。" },
+        "ISFP": { name: "綠色藝術家 (ISFP)", desc: "<span class='highlight'>【廢物美學】</span>擁有魔法般的雙手，能把不起眼的廢棄物變成令人驚豔的藝術品。" },
+        "ENTJ": { name: "星際領航員 (ENTJ)", desc: "<span class='highlight'>【戰略指揮】</span>天生的領導者！有能力策劃大型的環保挑戰，並堅定地帶領大家達成目標。" },
+        "ENTP": { name: "奇蹟發明家 (ENTP)", desc: "<span class='highlight'>【破框思考】</span>腦子裡總有各種天馬行空的點子，總能想出別人意想不到的環保新招。" },
+        "INTJ": { name: "綠能架構師 (INTJ)", desc: "<span class='highlight'>【系統優化】</span>你總能一眼看出哪裡不夠效率，並設計出最完美的解決方案。" },
+        "INTP": { name: "永續煉金術士 (INTP)", desc: "<span class='highlight'>【知識解析】</span>喜歡鑽研科學原理，是大家身邊行走的環保百科全書。" },
+        "ENFJ": { name: "晨光引導者 (ENFJ)", desc: "<span class='highlight'>【熱情號召】</span>充滿感染力！只要你開口號召，大家都會開心地跟著你一起行動。" },
+        "ENFP": { name: "風之語者 (ENFP)", desc: "<span class='highlight'>【快樂散播】</span>你能把枯燥的工作變成一場尋寶遊戲，讓身邊的人覺得做環保超好玩！" },
+        "INFJ": { name: "森林預言家 (INFJ)", desc: "<span class='highlight'>【溫柔感化】</span>你不會大聲說教，但總能用溫柔的文字或畫作，深深打動別人的心。" },
+        "INFP": { name: "流浪的森之詩人 (INFP)", desc: "<span class='highlight'>【萬物共情】</span>對一花一草都有深厚的感情，你是自然界最貼心、最細膩的守護者。" }
+    };
+
+    let currentQuestionIndex = 0;
+    let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+
+    function changeScene(fromId, toId, callback) {
+        const fromScene = document.getElementById(fromId);
+        const toScene = document.getElementById(toId);
+        fromScene.classList.add('fade-out'); 
+        setTimeout(() => {
+            fromScene.style.display = 'none'; 
+            fromScene.classList.remove('fade-out');
+            toScene.style.display = 'block'; 
+            if (callback) callback(); 
+            setTimeout(() => {
+                toScene.classList.add('fade-in'); 
+            }, 50);
+        }, 500); 
+    }
+
+    function startGame() {
+        currentQuestionIndex = 0;
+        scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('question-text').innerHTML = q.text;
+        document.getElementById('btn-a').innerText = q.a;
+        document.getElementById('btn-b').innerText = q.b;
+        const progressPercent = (currentQuestionIndex / questions.length) * 100;
+        document.getElementById('progress-fill').style.width = progressPercent + '%';
+        document.getElementById('progress-text').innerText = `試煉進度：${currentQuestionIndex + 1} / ${questions.length}`;
+    }
+
+    function selectAnswer(choice) {
+        const q = questions[currentQuestionIndex];
+        if (q.type === "EI") { choice === 'A' ? scores.E++ : scores.I++; }
+        if (q.type === "SN") { choice === 'A' ? scores.S++ : scores.N++; }
+        if (q.type === "TF") { choice === 'A' ? scores.T++ : scores.F++; }
+        if (q.type === "JP") { choice === 'A' ? scores.J++ : scores.P++; }
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            showQuestion(); 
+        } else {
+            changeScene('question-container', 'result-container', showResult);
+        }
+    }
+
+    function showResult() {
+        let mbti = "";
+        mbti += (scores.E >= scores.I) ? "E" : "I";
+        mbti += (scores.S >= scores.N) ? "S" : "N";
+        mbti += (scores.T >= scores.F) ? "T" : "F";
+        mbti += (scores.J >= scores.P) ? "J" : "P";
+        const finalResult = results[mbti] || results["INFP"]; 
+        document.getElementById('result-name').innerText = finalResult.name;
+        document.getElementById('result-description').innerHTML = finalResult.desc;
+    }
+</script>
+
+</body>
+</html>
